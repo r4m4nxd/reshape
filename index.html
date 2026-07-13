@@ -2254,6 +2254,7 @@ body{scroll-behavior:auto;}
           <button onclick="sbSignIn()" style="flex:1;padding:12px;border-radius:12px;background:rgba(0,200,117,0.15);border:1.5px solid rgba(0,200,117,0.3);color:var(--green);font-family:'Syne';font-size:13px;font-weight:800;cursor:pointer;">Sign In</button>
           <button onclick="sbSignUp()" style="flex:1;padding:12px;border-radius:12px;background:var(--card3);border:1.5px solid var(--border2);color:var(--text2);font-family:'Syne';font-size:13px;font-weight:700;cursor:pointer;">Sign Up</button>
         </div>
+        <div id="sync-auth-status" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;"></div>
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;">
           One-time setup in Supabase → SQL Editor, run:<br>
           <code style="font-size:9px;color:var(--text2);word-break:break-all;">create table sr_state (user_id uuid primary key references auth.users, data jsonb, updated_at timestamptz default now()); alter table sr_state enable row level security; create policy "own" on sr_state for all using (auth.uid()=user_id);</code>
@@ -4123,6 +4124,7 @@ function resetTodayData(){
 let toastT;
 function toast(msg,cls){
   const el=document.getElementById('toast-el');
+  if(!el){ console.log('[toast]',msg); return; }
   el.textContent=msg;el.className='toast show '+(cls||'');
   clearTimeout(toastT);
   toastT=setTimeout(()=>{el.className='toast';},2600);
@@ -7481,34 +7483,70 @@ function sbSaveConfig(){
   localStorage.setItem('sb_email',SB.email);
 }
 
+function syncStatus(msg,type){
+  const el=document.getElementById('sync-auth-status');
+  if(!el) return;
+  el.style.display='block';
+  const colors={err:['rgba(244,67,54,0.1)','rgba(244,67,54,0.25)','var(--red)'],ok:['rgba(0,200,117,0.1)','rgba(0,200,117,0.25)','var(--green)'],info:['var(--card3)','var(--border2)','var(--text2)']};
+  const [bg,bd,c]=colors[type||'info'];
+  el.style.background=bg;el.style.border='1px solid '+bd;el.style.color=c;
+  el.innerHTML=msg;
+}
+
 async function sbAuth(mode){
-  const url=(document.getElementById('sb-url-input')?.value||'').trim().replace(/\/$/,'');
+  const url=(document.getElementById('sb-url-input')?.value||'').trim().replace(/\/+$/,'');
   const key=(document.getElementById('sb-key-input')?.value||'').trim();
   const email=(document.getElementById('sb-email-input')?.value||'').trim();
   const pass=(document.getElementById('sb-pass-input')?.value||'').trim();
-  if(!url||!key||!email||!pass){ toast('Fill all fields'); return; }
+
+  if(!url||!key||!email||!pass){ syncStatus('⚠️ Fill all four fields (URL, key, email, password).','err'); return; }
+  if(!url.startsWith('https://')){ syncStatus('⚠️ URL must start with https:// — copy it from Supabase → Settings → API → Project URL.','err'); return; }
+
   SB.url=url; SB.key=key;
   const endpoint = mode==='signup'?'signup':'token?grant_type=password';
+  syncStatus(mode==='signup'?'⏳ Creating account...':'⏳ Signing in...','info');
+
   try{
-    toast(mode==='signup'?'Creating account...':'Signing in...');
     const res=await fetch(`${url}/auth/v1/${endpoint}`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':key},
       body:JSON.stringify({email,password:pass})
     });
-    const data=await res.json();
-    if(!res.ok){ toast('Auth failed: '+(data.error_description||data.msg||data.error||'check details')); return; }
-    if(mode==='signup'&&!data.access_token){ toast('Account created. Now sign in.'); return; }
+    let data={};
+    try{ data=await res.json(); }catch(e){}
+
+    if(!res.ok){
+      const err=data.error_description||data.msg||data.error||('HTTP '+res.status);
+      if(res.status===400&&mode==='signin'&&/invalid/i.test(err))
+        syncStatus('❌ Wrong email or password. If new, tap Sign Up first.','err');
+      else if(res.status===422||/already/i.test(err))
+        syncStatus('❌ Account already exists. Tap Sign In instead.','err');
+      else if(res.status===401||res.status===403)
+        syncStatus('❌ Invalid API key. Copy the anon/public key from Supabase → Settings → API.','err');
+      else
+        syncStatus('❌ '+err,'err');
+      return;
+    }
+
+    if(mode==='signup' && !data.access_token){
+      syncStatus('✅ Account created! Now tap <strong>Sign In</strong> with the same email/password.','ok');
+      return;
+    }
+
+    if(!data.access_token){ syncStatus('❌ No token returned. Check email confirmation is disabled in Supabase → Auth → Providers → Email.','err'); return; }
+
     SB.token=data.access_token;
     SB.refresh=data.refresh_token||'';
     SB.userId=data.user?.id||'';
     SB.email=email;
     sbSaveConfig();
+    syncStatus('✅ Signed in! Pulling your cloud data...','ok');
     updateSyncUI();
-    toast('Signed in ✓ Syncing...');
-    // Auto-pull on first sign-in to get existing cloud data
     await syncPull(true);
-  }catch(e){ toast('Connection error — check URL'); }
+    toast('☁️ Cloud sync active','t-green');
+  }catch(e){
+    syncStatus('❌ Cannot reach Supabase. Check the URL is exactly right and you have internet. ('+e.message+')','err');
+  }
 }
 function sbSignIn(){ sbAuth('signin'); }
 function sbSignUp(){ sbAuth('signup'); }
@@ -7967,18 +8005,23 @@ window.addEventListener('load', function(){
 if('serviceWorker' in navigator){
   // Inline SW via blob — works from local file
   const swCode = `
-    const CACHE = 'singh-reshape-v1';
-    self.addEventListener('install', e => {
-      self.skipWaiting();
-    });
+    const CACHE = 'singh-reshape-v2';
+    self.addEventListener('install', e => { self.skipWaiting(); });
     self.addEventListener('activate', e => {
       e.waitUntil(caches.keys().then(keys =>
         Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
       ));
     });
     self.addEventListener('fetch', e => {
+      const req = e.request;
+      const url = new URL(req.url);
+      // NEVER intercept: non-GET, cross-origin (Supabase, OpenAI, API Ninjas, fonts, CDNs)
+      if (req.method !== 'GET' || url.origin !== self.location.origin) {
+        return; // let the browser handle it directly — no SW involvement
+      }
+      // Same-origin GET only: cache-first for offline app shell
       e.respondWith(
-        caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
+        caches.match(req).then(cached => cached || fetch(req).catch(() => cached))
       );
     });
   `;
