@@ -2238,7 +2238,7 @@ body{scroll-behavior:auto;}
   </div>
 
   <!-- ══ CLOUD SYNC (SUPABASE) ══ -->
-  <div class="sec-lbl">☁️ CLOUD SYNC</div>
+  <div class="sec-lbl">☁️ CLOUD SYNC <span style="color:var(--green);font-size:10px;font-weight:700;">v3 · sync build</span></div>
   <div style="margin:0 14px 14px;">
     <div class="settings-card" id="sync-config-card">
       <div id="sync-signed-out">
@@ -2255,6 +2255,8 @@ body{scroll-behavior:auto;}
           <button onclick="sbSignUp()" style="flex:1;padding:12px;border-radius:12px;background:var(--card3);border:1.5px solid var(--border2);color:var(--text2);font-family:'Syne';font-size:13px;font-weight:700;cursor:pointer;">Sign Up</button>
         </div>
         <div id="sync-auth-status" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;"></div>
+        <button onclick="sbTestConnection()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:var(--card3);border:1px solid var(--border2);color:var(--text3);font-family:'Syne';font-size:11px;font-weight:700;cursor:pointer;">🔌 Test Connection</button>
+        <div style="text-align:center;font-size:9px;color:var(--text3);margin-top:8px;">Build 2026.07.13 · Cloud Sync v3</div>
         <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;">
           One-time setup in Supabase → SQL Editor, run:<br>
           <code style="font-size:9px;color:var(--text2);word-break:break-all;">create table sr_state (user_id uuid primary key references auth.users, data jsonb, updated_at timestamptz default now()); alter table sr_state enable row level security; create policy "own" on sr_state for all using (auth.uid()=user_id);</code>
@@ -2517,7 +2519,8 @@ const MILESTONES_DATA = [
 /* ═══════════════════ STATE & STORAGE ═══════════════════ */
 const TODAY_KEY = new Date().toISOString().slice(0,10); // e.g. "2025-04-21"
 
-function S(key,val){if(val===undefined)return JSON.parse(localStorage.getItem(key)||'null');localStorage.setItem(key,JSON.stringify(val));if(typeof autoSyncPush==='function'&&!key.startsWith('sb_'))autoSyncPush();}
+let _APP_READY=false;
+function S(key,val){if(val===undefined)return JSON.parse(localStorage.getItem(key)||'null');localStorage.setItem(key,JSON.stringify(val));if(_APP_READY&&typeof autoSyncPush==='function'&&!key.startsWith('sb_')){try{autoSyncPush();}catch(e){}}}
 function Sd(key){return key+'_'+TODAY_KEY;}
 
 // persisted state
@@ -2542,6 +2545,23 @@ let CHECKLIST = S(Sd('checklist')) || {};
 let WORKOUT_SETS = S(Sd('workout_sets')) || {}; // {day_exIdx_setIdx: {reps,weight,done}}
 let WO_COMPLETE = S(Sd('wo_complete')) || {}; // {day: bool}
 let HISTORY = S('tfm_history') || []; // [{date,day,exCount}]
+// ── Hoisted state declarations (fix temporal dead zone) ──
+let MEAL_LOGGED = S(Sd('meal_logged')) || {}; // {mealId_foodIdx: bool}
+let SUPPS_CHECKED = S(Sd('supps')) || {};
+let MEASUREMENTS = S('tfm_measurements') || []; // [{date,waist,chest,arms,thighs}]
+let GOAL_MODE = S('tfm_goal_mode') || 'loss';
+let CUSTOM_GROCERY = S('tfm_grocery_custom') || [];
+let WEIGHT_HISTORY = S('tfm_weight_log') || []; // [{date,weight}]
+let KNEE_LOG = S('tfm_knee') || {}; // {date: 0-10}
+let QUICK_ADD_LOG = S(Sd('quick_add')) || [];
+let SB = {
+  url: localStorage.getItem('sb_url')||'',
+  key: localStorage.getItem('sb_key')||'',
+  token: localStorage.getItem('sb_token')||'',
+  refresh: localStorage.getItem('sb_refresh')||'',
+  userId: localStorage.getItem('sb_userid')||'',
+  email: localStorage.getItem('sb_email')||'',
+};
 
 let timerInterval = null;
 let timerSec = 0;
@@ -3831,7 +3851,7 @@ function buildRestSection(container){
 }
 
 /* ═══════════════════ NUTRITION — MFP STYLE ═══════════════════ */
-let MEAL_LOGGED = S(Sd('meal_logged')) || {}; // {mealId_foodIdx: bool}
+// [hoisted] let MEAL_LOGGED
 
 function buildNutrition(){
   // date label
@@ -4137,7 +4157,7 @@ function toggleCheck(el){
 }
 
 /* ═══════════ SUPPLEMENT CHECKLIST ═══════════ */
-let SUPPS_CHECKED = S(Sd('supps')) || {};
+// [hoisted] let SUPPS_CHECKED
 function toggleSuppCL(el, key){
   el.classList.toggle('done');
   const isDone = el.classList.contains('done');
@@ -4467,7 +4487,7 @@ function updateRpe(day,i,s,val){
 }
 
 /* ═══════════ BODY MEASUREMENTS ═══════════ */
-let MEASUREMENTS = S('tfm_measurements') || []; // [{date,waist,chest,arms,thighs}]
+// [hoisted] let MEASUREMENTS
 
 function saveMeasurements(){
   const waist = parseFloat(document.getElementById('inp-waist').value)||0;
@@ -4904,7 +4924,7 @@ const GOAL_MODES = {
   gain:  {label:'💪 Muscle Gain', kcal:2200, p:190, c:200, f:65,  note:'200 cal surplus · High protein · Complex carbs only'},
   maint: {label:'⚖️ Maintain',    kcal:2000, p:175, c:150, f:65,  note:'Maintenance · High protein · Balanced fat · Low sugar'},
 };
-let GOAL_MODE = S('tfm_goal_mode') || 'loss';
+// [hoisted] let GOAL_MODE
 
 function setGoalMode(mode){
   GOAL_MODE = mode;
@@ -6497,7 +6517,7 @@ function saveSessionNote(day, exIdx, text){
 }
 
 /* ═══════════ GROCERY — ADD CUSTOM ITEM ═══════════ */
-let CUSTOM_GROCERY = S('tfm_grocery_custom') || [];
+// [hoisted] let CUSTOM_GROCERY
 
 function renderCustomGrocery(){
   CUSTOM_GROCERY = S('tfm_grocery_custom')||[];
@@ -7113,6 +7133,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   updateSyncUI();
   // Auto-pull latest from cloud on app open (multi-device sync)
   if(sbSignedIn()) setTimeout(()=>syncPullQuiet(),800);
+  // App fully initialized — safe to enable auto-sync now
+  _APP_READY=true;
 });
 
 // Quiet pull — only reloads if cloud is newer than local
@@ -7143,7 +7165,7 @@ async function syncPullQuiet(){
 }
 
 /* ═══════════ WEIGHT HISTORY + CHART ═══════════ */
-let WEIGHT_HISTORY = S('tfm_weight_log') || []; // [{date,weight}]
+// [hoisted] let WEIGHT_HISTORY
 
 function adjWeight(delta){
   const wasAbove85 = CW > 85;
@@ -7296,7 +7318,7 @@ function buildWeeklyAnalytics(){
 }
 
 /* ═══════════ KNEE PAIN TRACKER ═══════════ */
-let KNEE_LOG = S('tfm_knee') || {}; // {date: 0-10}
+// [hoisted] let KNEE_LOG
 
 function buildKneePainScale(){
   const c = document.getElementById('knee-scale');
@@ -7367,7 +7389,7 @@ function scheduleReminders(){
 if(S('tfm_notif')) scheduleReminders();
 
 /* ═══════════ QUICK-ADD NUTRITION ═══════════ */
-let QUICK_ADD_LOG = S(Sd('quick_add')) || [];
+// [hoisted] let QUICK_ADD_LOG
 
 function openQuickAdd(){ document.getElementById('quick-add-panel').style.display='block'; }
 function closeQuickAdd(){ document.getElementById('quick-add-panel').style.display='none'; }
@@ -7462,14 +7484,7 @@ function clearTodayMeals(){
    SUPABASE CLOUD SYNC — matches RaMoney / RamanFX pattern
    Full state blob push/pull, multi-device sync
    ═══════════════════════════════════════════════════ */
-let SB = {
-  url: localStorage.getItem('sb_url')||'',
-  key: localStorage.getItem('sb_key')||'',
-  token: localStorage.getItem('sb_token')||'',
-  refresh: localStorage.getItem('sb_refresh')||'',
-  userId: localStorage.getItem('sb_userid')||'',
-  email: localStorage.getItem('sb_email')||'',
-};
+// [SB hoisted above]
 
 function sbConfigured(){ return SB.url && SB.key; }
 function sbSignedIn(){ return sbConfigured() && SB.token && SB.userId; }
@@ -7491,6 +7506,29 @@ function syncStatus(msg,type){
   const [bg,bd,c]=colors[type||'info'];
   el.style.background=bg;el.style.border='1px solid '+bd;el.style.color=c;
   el.innerHTML=msg;
+}
+
+async function sbTestConnection(){
+  const url=(document.getElementById('sb-url-input')?.value||'').trim().replace(/\/+$/,'');
+  const key=(document.getElementById('sb-key-input')?.value||'').trim();
+  if(!url||!key){ syncStatus('⚠️ Enter URL and anon key first, then test.','err'); return; }
+  if(!url.startsWith('https://')){ syncStatus('⚠️ URL must start with https://','err'); return; }
+  syncStatus('⏳ Testing connection to Supabase...','info');
+  try{
+    // Test 1: reach the auth health endpoint with the anon key
+    const res=await fetch(`${url}/auth/v1/settings`,{ headers:{'apikey':key} });
+    if(res.ok){
+      const s=await res.json().catch(()=>({}));
+      const emailConfirm = s.mailer_autoconfirm===false ? '⚠️ Email confirmation is ON — turn it OFF in Supabase → Auth → Providers → Email for instant sign-in.' : '✅ Email auto-confirm OK.';
+      syncStatus('✅ Connected to Supabase successfully!<br>URL and key are valid.<br>'+emailConfirm+'<br><br>Now enter email + password and Sign Up, then Sign In.','ok');
+    } else if(res.status===401){
+      syncStatus('❌ Anon key rejected (401). Copy the <strong>anon / public</strong> key from Supabase → Settings → API — not the service_role key.','err');
+    } else {
+      syncStatus('❌ Server returned HTTP '+res.status+'. Double-check your Project URL.','err');
+    }
+  }catch(e){
+    syncStatus('❌ Cannot reach '+url+'<br>Check: (1) URL is exactly right, (2) you have internet, (3) no typo in the domain. Error: '+e.message,'err');
+  }
 }
 
 async function sbAuth(mode){
@@ -8001,33 +8039,16 @@ window.addEventListener('load', function(){
   }
 });
 
-// Service Worker for offline support
+// Service Worker REMOVED — it was interfering with Supabase/OpenAI network calls.
+// Actively unregister any previously-installed SW and purge its caches so the
+// latest version of the app always loads fresh (fixes "changes not appearing").
 if('serviceWorker' in navigator){
-  // Inline SW via blob — works from local file
-  const swCode = `
-    const CACHE = 'singh-reshape-v2';
-    self.addEventListener('install', e => { self.skipWaiting(); });
-    self.addEventListener('activate', e => {
-      e.waitUntil(caches.keys().then(keys =>
-        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-      ));
-    });
-    self.addEventListener('fetch', e => {
-      const req = e.request;
-      const url = new URL(req.url);
-      // NEVER intercept: non-GET, cross-origin (Supabase, OpenAI, API Ninjas, fonts, CDNs)
-      if (req.method !== 'GET' || url.origin !== self.location.origin) {
-        return; // let the browser handle it directly — no SW involvement
-      }
-      // Same-origin GET only: cache-first for offline app shell
-      e.respondWith(
-        caches.match(req).then(cached => cached || fetch(req).catch(() => cached))
-      );
-    });
-  `;
-  const swBlob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{/* local file may block SW — fine */});
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  }).catch(()=>{});
+  if(window.caches && caches.keys){
+    caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))).catch(()=>{});
+  }
 }
 
 // iOS install hint — show once if not already installed
