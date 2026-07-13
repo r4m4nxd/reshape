@@ -1810,11 +1810,11 @@ body{scroll-behavior:auto;}
         <div class="macro-track"><div class="macro-fill" id="p-bar" style="width:0%;background:var(--fire)"></div></div>
       </div>
       <div class="macro-row-mfp">
-        <div class="macro-head"><span class="macro-name" style="color:var(--blue)">Carbs</span><span class="macro-vals"><span id="c-eaten">0</span>g / 180g</span></div>
+        <div class="macro-head"><span class="macro-name" style="color:var(--blue)">Carbs</span><span class="macro-vals"><span id="c-eaten">0</span>g / 130g</span></div>
         <div class="macro-track"><div class="macro-fill" id="c-bar" style="width:0%;background:var(--blue)"></div></div>
       </div>
       <div class="macro-row-mfp">
-        <div class="macro-head"><span class="macro-name" style="color:var(--gold)">Fat</span><span class="macro-vals"><span id="f-eaten">0</span>g / 65g</span></div>
+        <div class="macro-head"><span class="macro-name" style="color:var(--gold)">Fat</span><span class="macro-vals"><span id="f-eaten">0</span>g / 60g</span></div>
         <div class="macro-track"><div class="macro-fill" id="f-bar" style="width:0%;background:var(--gold)"></div></div>
       </div>
     </div>
@@ -2077,7 +2077,7 @@ body{scroll-behavior:auto;}
   <div class="rule-c"><div class="rule-n">1</div><div><div class="rule-t">Sleep 7.5–8 hrs nightly</div><div class="rule-d">Poor sleep raises cortisol → stores belly fat. Bed by 10pm on weekdays.</div></div></div>
   <div class="rule-c"><div class="rule-n">2</div><div><div class="rule-t">10,000 steps every day</div><div class="rule-d">Park far. Walk calls. Evening walk. Your hidden daily calorie burn.</div></div></div>
   <div class="rule-c"><div class="rule-n">3</div><div><div class="rule-t">Never miss 2 workouts in a row</div><div class="rule-d">Missing one is human. Missing two starts a quitting habit.</div></div></div>
-  <div class="rule-c"><div class="rule-n">4</div><div><div class="rule-t">Wife cooks ONE main at dinner — alternating</div><div class="rule-d">Mon/Wed/Fri = dal (moong, rajma, chole). Tue/Thu/Sat = paneer sabzi. Never both same night. Wife packs extra for lunch next day — zero additional cooking ever.</div></div></div>
+  <div class="rule-c"><div class="rule-n">4</div><div><div class="rule-t">No refined carbs or sugar — ever</div><div class="rule-d">White bread, biscuits, fruit juice, sweet chai, mithai — all raise triglycerides directly. Your HbA1c 5.6% = prediabetes. One sugar hit sets you back 3 days. Not worth it.</div></div></div>
   <div class="rule-c"><div class="rule-n">5</div><div><div class="rule-t">No food after 8:30 PM</div><div class="rule-d">Kitchen closes at 8:30. Water and herbal chai only.</div></div></div>
   <div class="rule-c"><div class="rule-n">6</div><div><div class="rule-t">Respect the PCL — be patient</div><div class="rule-d">Re-injury = 3 months backwards. Every exercise protects your left knee.</div></div></div>
   <div style="height:8px"></div>
@@ -2237,6 +2237,52 @@ body{scroll-behavior:auto;}
     </div>
   </div>
 
+  <!-- ══ CLOUD SYNC (SUPABASE) ══ -->
+  <div class="sec-lbl">☁️ CLOUD SYNC</div>
+  <div style="margin:0 14px 14px;">
+    <div class="settings-card" id="sync-config-card">
+      <div id="sync-signed-out">
+        <span class="settings-label">Supabase URL</span>
+        <input class="settings-input" id="sb-url-input" type="text" placeholder="https://xxxx.supabase.co" autocomplete="off" style="margin-bottom:8px;">
+        <span class="settings-label">Supabase Anon Key</span>
+        <input class="settings-input" id="sb-key-input" type="password" placeholder="eyJhbGc..." autocomplete="off" style="margin-bottom:8px;">
+        <span class="settings-label">Email</span>
+        <input class="settings-input" id="sb-email-input" type="email" placeholder="you@email.com" autocomplete="off" style="margin-bottom:8px;">
+        <span class="settings-label">Password</span>
+        <input class="settings-input" id="sb-pass-input" type="password" placeholder="••••••••" autocomplete="off" style="margin-bottom:10px;">
+        <div style="display:flex;gap:8px;">
+          <button onclick="sbSignIn()" style="flex:1;padding:12px;border-radius:12px;background:rgba(0,200,117,0.15);border:1.5px solid rgba(0,200,117,0.3);color:var(--green);font-family:'Syne';font-size:13px;font-weight:800;cursor:pointer;">Sign In</button>
+          <button onclick="sbSignUp()" style="flex:1;padding:12px;border-radius:12px;background:var(--card3);border:1.5px solid var(--border2);color:var(--text2);font-family:'Syne';font-size:13px;font-weight:700;cursor:pointer;">Sign Up</button>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;">
+          One-time setup in Supabase → SQL Editor, run:<br>
+          <code style="font-size:9px;color:var(--text2);word-break:break-all;">create table sr_state (user_id uuid primary key references auth.users, data jsonb, updated_at timestamptz default now()); alter table sr_state enable row level security; create policy "own" on sr_state for all using (auth.uid()=user_id);</code>
+        </div>
+      </div>
+      <div id="sync-signed-in" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;border-radius:20px;background:rgba(0,200,117,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;">☁️</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne';font-size:14px;font-weight:800;color:var(--green);">Cloud Sync Active</div>
+            <div style="font-size:11px;color:var(--text3);" id="sync-email"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="syncPush()" style="padding:14px 10px;border-radius:14px;background:linear-gradient(135deg,rgba(59,158,255,0.15),rgba(59,158,255,0.05));border:1.5px solid rgba(59,158,255,0.3);cursor:pointer;text-align:center;">
+            <div style="font-size:22px;margin-bottom:2px;">⬆️</div>
+            <div style="font-family:'Syne';font-size:12px;font-weight:800;color:var(--blue);">Sync to Cloud</div>
+          </button>
+          <button onclick="syncPull()" style="padding:14px 10px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.05));border:1.5px solid rgba(167,139,250,0.3);cursor:pointer;text-align:center;">
+            <div style="font-size:22px;margin-bottom:2px;">⬇️</div>
+            <div style="font-family:'Syne';font-size:12px;font-weight:800;color:var(--purple);">Sync from Cloud</div>
+          </button>
+        </div>
+        <div id="sync-status" style="padding:8px 12px;background:var(--card3);border-radius:10px;font-size:11px;color:var(--text3);text-align:center;margin-bottom:8px;">Last sync: never</div>
+        <button onclick="sbSignOut()" style="width:100%;padding:10px;border-radius:12px;background:var(--card3);border:1px solid var(--border2);color:var(--text3);font-family:'Syne';font-size:12px;font-weight:700;cursor:pointer;">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ BACKUP & RECOVERY ══ -->
   <div class="sec-lbl">🔐 BACKUP & RECOVERY</div>
   <div style="margin:0 14px 14px;">
@@ -2372,8 +2418,8 @@ const EX = {
     {n:'Plank',m:'Core · Finisher',sets:3,holdSec:45,reps:'45 sec',rest:30,gif:null,noWeight:true,isTimer:true,tip:`🎯 Body straight as a plank. Hips level — don't sag or pike. Breathe steadily. Build to 60 sec over weeks.`},
   ],
   tue:[
-    {n:'Barbell Hip Thrust',m:'Glutes · Zero Knee Stress',sets:4,reps:'15',rest:75,gif:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Barbell-hip-thrust.gif/320px-Barbell-hip-thrust.gif',tip:'🎯 Bar across hips (use foam pad). Feet flat, drive hips straight up. SQUEEZE glutes hard at top for 1 sec. Best glute builder with no PCL stress.'},
-    {n:'Romanian Deadlift',m:'Hamstrings + Glutes',sets:4,reps:'10',rest:90,gif:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Romanian-deadlift.gif/320px-Romanian-deadlift.gif',tip:'🎯 Hinge at HIPS only — slight knee bend. Lower bar until deep hamstring stretch. Drive hips forward to stand. Flat back always.'},
+    {n:'Barbell Hip Thrust',m:'Glutes · Zero Knee Stress',sets:4,reps:'15',rest:75,gif:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Barbell-hip-thrust.gif/320px-Barbell-hip-thrust.gif',tip:'🎯 Bar across hips (use foam pad). Feet flat, drive hips straight up. SQUEEZE glutes 1 sec at top. Best testosterone-boosting compound movement with ZERO knee stress. Priority exercise.'},
+    {n:'Romanian Deadlift',m:'Hamstrings + Glutes',sets:4,reps:'10',rest:90,gif:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Romanian-deadlift.gif/320px-Romanian-deadlift.gif',tip:'🎯 Hinge at HIPS only — slight knee bend. Lower bar until deep hamstring stretch. Drive hips forward to stand. Flat back always. KEY exercise for testosterone — recruits large muscle mass = hormonal response.'},
     {n:'Partial Squat — 90° MAX',m:'⚠️ STOP at parallel, no lower',sets:3,reps:'12',rest:75,gif:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Squat_motion_animated.gif/220px-Squat_motion_animated.gif',tip:'⚠️ PCL: Stop EXACTLY at 90°. Do NOT go lower. Feet shoulder-width, toes slightly out. Slow controlled descent. Drive through heels.'},
     {n:'Lying Leg Curl — Band',m:'Hamstrings · Face Down',sets:3,reps:'15',rest:60,gif:null,tip:`🎯 Face down, band around ankles. Curl heels toward glutes slowly. Control the return — don't let band snap back.`},
     {n:'Single-Leg Deadlift',m:'Balance + Glutes · Light Weight',sets:3,reps:'10 each',rest:60,gif:null,tip:'🎯 Light weight only. Hinge on one leg, other extends behind. Go VERY slow on left leg — excellent PCL rehab + balance training.'},
@@ -2470,7 +2516,7 @@ const MILESTONES_DATA = [
 /* ═══════════════════ STATE & STORAGE ═══════════════════ */
 const TODAY_KEY = new Date().toISOString().slice(0,10); // e.g. "2025-04-21"
 
-function S(key,val){if(val===undefined)return JSON.parse(localStorage.getItem(key)||'null');localStorage.setItem(key,JSON.stringify(val));}
+function S(key,val){if(val===undefined)return JSON.parse(localStorage.getItem(key)||'null');localStorage.setItem(key,JSON.stringify(val));if(typeof autoSyncPush==='function'&&!key.startsWith('sb_'))autoSyncPush();}
 function Sd(key){return key+'_'+TODAY_KEY;}
 
 // persisted state
@@ -3664,7 +3710,7 @@ function buildCardioSection(day,container){
     {m:'🌿 Outdoor Walk — Airdrie',d:'20 min',desc:'Nose Creek Park or canal paths · Easy pace · Fresh air and mental reset',dots:[1,0,0,0,0]},
   ]:[
     {m:'🚣 Rowing Machine',d:'20 min',desc:'Moderate pace · 22–24 strokes/min · Drive legs, then lean, then pull arms · ~250 cal',dots:[1,1,1,0,0]},
-    {m:'⚙️ Elliptical',d:'20 min',desc:'Resistance 6–8 · Target 120–145 BPM (fat burn zone) · Low impact · ~220 cal',dots:[1,1,1,2,0]},
+    {m:'⚙️ Elliptical',d:'20 min',desc:'Resistance 6–8 · Target 120–145 BPM · Zone 2 — lowers triglycerides + insulin resistance · Low impact · ~220 cal',dots:[1,1,1,2,0]},
     {m:'🚲 Bicycle Cool-Down',d:'10 min',desc:'Easy resistance · Spin at comfortable cadence · Let heart rate drop below 100 BPM before stopping',dots:[1,0,0,0,0],timerMin:10},
   ];
   container.innerHTML=`
@@ -3925,8 +3971,8 @@ function updateNutritionTotals(){
   // Update goal label dynamically
   const goalEl=document.getElementById('nut-kcal-goal');
   if(goalEl) goalEl.textContent=targetKcal.toLocaleString();
-  document.getElementById('p-eaten').textContent=totalP;document.getElementById('p-bar').style.width=Math.min(100,totalP/150*100)+'%';
-  document.getElementById('c-eaten').textContent=totalC;document.getElementById('c-bar').style.width=Math.min(100,totalC/180*100)+'%';
+  document.getElementById('p-eaten').textContent=totalP;document.getElementById('p-bar').style.width=Math.min(100,totalP/180*100)+'%';
+  document.getElementById('c-eaten').textContent=totalC;document.getElementById('c-bar').style.width=Math.min(100,totalC/130*100)+'%';
   document.getElementById('f-eaten').textContent=totalF;document.getElementById('f-bar').style.width=Math.min(100,totalF/65*100)+'%';
 }
 
@@ -4034,7 +4080,7 @@ function navTo(page,btn){
     buildAIPredictiveInsights();
   }
   if(page==='calendar'){buildCalendar();}
-  if(page==='more'){setTimeout(()=>{restoreGrocery();updateBackupStatus();},50);}
+  if(page==='more'){setTimeout(()=>{restoreGrocery();updateBackupStatus();updateSyncUI();},50);}
 }
 
 /* ═══════════════════ RESET ═══════════════════ */
@@ -4852,9 +4898,9 @@ function showCopyModal(text){
 
 /* ═══════════ GOAL MODE ═══════════ */
 const GOAL_MODES = {
-  loss:  {label:'🔥 Fat Loss',    kcal:1900, p:155, c:160, f:58,  note:'300 cal deficit · High protein to preserve muscle'},
-  gain:  {label:'💪 Muscle Gain', kcal:2200, p:160, c:200, f:65,  note:'200 cal surplus · Extra carbs for training fuel'},
-  maint: {label:'⚖️ Maintain',    kcal:2000, p:150, c:170, f:60,  note:'Maintenance calories · Balanced macros'},
+  loss:  {label:'🔥 Fat Loss',    kcal:1800, p:180, c:120, f:60,  note:'Moderate deficit · 180g protein · Low refined carbs · Fix insulin resistance'},
+  gain:  {label:'💪 Muscle Gain', kcal:2200, p:190, c:200, f:65,  note:'200 cal surplus · High protein · Complex carbs only'},
+  maint: {label:'⚖️ Maintain',    kcal:2000, p:175, c:150, f:65,  note:'Maintenance · High protein · Balanced fat · Low sugar'},
 };
 let GOAL_MODE = S('tfm_goal_mode') || 'loss';
 
@@ -5110,7 +5156,7 @@ async function buildCoachMessage(forceRefresh){
   let msg='',tip='';
   if(d===0){ msg='Rest day, Raman. Your body is rebuilding right now.'; tip='Do the recovery routine. Log your weight and measurements. Prep meals for the week.'; }
   else if(energy<=2||sore>=4){ msg='High fatigue detected — modify intensity today.'; tip='Use 70% of planned weights. Focus on form. Your body is signalling recovery.'; }
-  else if(workoutDays[d]){ msg=`Today: ${workoutDays[d]}.`; tip=`Target: ${mode?.kcal} kcal · ${mode?.p}g protein. Add your API key in More → AI Settings for a personalised message.`; }
+  else if(workoutDays[d]){ msg=`Today: ${workoutDays[d]}.`; tip=`Target: ${mode?.kcal} kcal · ${mode?.p}g protein. Priority: hit protein target — low testosterone needs high protein. No sugar today.`; }
   else { msg='Rest or active recovery today.'; tip='Light walk keeps metabolism active. Add your API key for personalised coaching.'; }
   msgEl.textContent=msg;
   if(tipEl) tipEl.textContent=tip;
@@ -5378,7 +5424,7 @@ function updateDailyScore(){
 
   // Steps score (10pts) — bonus category
   const steps = S(Sd('steps'))||0;
-  const stepsScore = steps >= 10000 ? 10 : steps >= 7000 ? 7 : steps >= 5000 ? 4 : steps > 0 ? 2 : 0;
+  const stepsScore = steps >= 10000 ? 10 : steps >= 8000 ? 8 : steps >= 6000 ? 5 : steps > 0 ? 2 : 0;
 
   // Workout score (30pts) — Sunday = rest day, score is full if habit score >= 4 items done
   const woComplete=Object.keys(WO_COMPLETE).some(k=>k.endsWith(TODAY_KEY));
@@ -5553,7 +5599,7 @@ function restoreFatigue(){
 
 /* ═══════════ SAVED MEALS ONE-TAP ═══════════ */
 const SAVED_MEALS=[
-  {name:'Post-Workout Shake',      kcal:555,p:57,c:59,f:19},
+  {name:'3 Eggs + Whey + Oats',   kcal:540,p:60,c:25,f:19},
   {name:'Lunch — Leftovers',       kcal:560,p:34,c:78,f:14},
   {name:'Greek Yogurt + Walnuts',  kcal:195,p:22,c:11,f:13},
   {name:'Soya Chunks 60g',         kcal:215,p:30,c:14,f:2 },
@@ -7062,7 +7108,37 @@ document.addEventListener('DOMContentLoaded', ()=>{
   restoreNinjaKey();
   scheduleDailyAutoSave();
   updateBackupStatus();
+  updateSyncUI();
+  // Auto-pull latest from cloud on app open (multi-device sync)
+  if(sbSignedIn()) setTimeout(()=>syncPullQuiet(),800);
 });
+
+// Quiet pull — only reloads if cloud is newer than local
+async function syncPullQuiet(){
+  if(!sbSignedIn()) return;
+  try{
+    let res=await fetch(`${SB.url}/rest/v1/sr_state?user_id=eq.${SB.userId}&select=data,updated_at`,{
+      headers:{'apikey':SB.key,'Authorization':'Bearer '+SB.token}
+    });
+    if(res.status===401&&await sbRefreshToken()){
+      res=await fetch(`${SB.url}/rest/v1/sr_state?user_id=eq.${SB.userId}&select=data,updated_at`,{
+        headers:{'apikey':SB.key,'Authorization':'Bearer '+SB.token}
+      });
+    }
+    if(!res.ok) return;
+    const rows=await res.json();
+    if(!rows.length||!rows[0].data) return;
+    const cloudTime=new Date(rows[0].data.syncedAt||rows[0].updated_at||0).getTime();
+    const localTime=new Date(localStorage.getItem('sb_lastsync')||0).getTime();
+    // Cloud newer by >10s → pull
+    if(cloudTime > localTime+10000){
+      const count=applySyncBlob(rows[0].data);
+      localStorage.setItem('sb_lastsync',new Date().toISOString());
+      toast('☁️ Newer cloud data found ('+count+' items). Reloading...');
+      setTimeout(()=>location.reload(),1200);
+    }
+  }catch(e){}
+}
 
 /* ═══════════ WEIGHT HISTORY + CHART ═══════════ */
 let WEIGHT_HISTORY = S('tfm_weight_log') || []; // [{date,weight}]
@@ -7379,6 +7455,204 @@ function clearTodayMeals(){
 
 /* ═══════════ EXPORT / IMPORT ═══════════ */
 /* ═══════════ BACKUP & RECOVERY SYSTEM ═══════════ */
+
+/* ═══════════════════════════════════════════════════
+   SUPABASE CLOUD SYNC — matches RaMoney / RamanFX pattern
+   Full state blob push/pull, multi-device sync
+   ═══════════════════════════════════════════════════ */
+let SB = {
+  url: localStorage.getItem('sb_url')||'',
+  key: localStorage.getItem('sb_key')||'',
+  token: localStorage.getItem('sb_token')||'',
+  refresh: localStorage.getItem('sb_refresh')||'',
+  userId: localStorage.getItem('sb_userid')||'',
+  email: localStorage.getItem('sb_email')||'',
+};
+
+function sbConfigured(){ return SB.url && SB.key; }
+function sbSignedIn(){ return sbConfigured() && SB.token && SB.userId; }
+
+function sbSaveConfig(){
+  localStorage.setItem('sb_url',SB.url);
+  localStorage.setItem('sb_key',SB.key);
+  localStorage.setItem('sb_token',SB.token);
+  localStorage.setItem('sb_refresh',SB.refresh);
+  localStorage.setItem('sb_userid',SB.userId);
+  localStorage.setItem('sb_email',SB.email);
+}
+
+async function sbAuth(mode){
+  const url=(document.getElementById('sb-url-input')?.value||'').trim().replace(/\/$/,'');
+  const key=(document.getElementById('sb-key-input')?.value||'').trim();
+  const email=(document.getElementById('sb-email-input')?.value||'').trim();
+  const pass=(document.getElementById('sb-pass-input')?.value||'').trim();
+  if(!url||!key||!email||!pass){ toast('Fill all fields'); return; }
+  SB.url=url; SB.key=key;
+  const endpoint = mode==='signup'?'signup':'token?grant_type=password';
+  try{
+    toast(mode==='signup'?'Creating account...':'Signing in...');
+    const res=await fetch(`${url}/auth/v1/${endpoint}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':key},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok){ toast('Auth failed: '+(data.error_description||data.msg||data.error||'check details')); return; }
+    if(mode==='signup'&&!data.access_token){ toast('Account created. Now sign in.'); return; }
+    SB.token=data.access_token;
+    SB.refresh=data.refresh_token||'';
+    SB.userId=data.user?.id||'';
+    SB.email=email;
+    sbSaveConfig();
+    updateSyncUI();
+    toast('Signed in ✓ Syncing...');
+    // Auto-pull on first sign-in to get existing cloud data
+    await syncPull(true);
+  }catch(e){ toast('Connection error — check URL'); }
+}
+function sbSignIn(){ sbAuth('signin'); }
+function sbSignUp(){ sbAuth('signup'); }
+
+function sbSignOut(){
+  SB.token=''; SB.refresh=''; SB.userId=''; SB.email='';
+  localStorage.removeItem('sb_token');
+  localStorage.removeItem('sb_refresh');
+  localStorage.removeItem('sb_userid');
+  localStorage.removeItem('sb_email');
+  updateSyncUI();
+  toast('Signed out');
+}
+
+function buildSyncBlob(){
+  // Collect ALL app data keys (everything except Supabase config itself)
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k && !k.startsWith('sb_')) data[k]=localStorage.getItem(k);
+  }
+  return { v:1, data, syncedAt:new Date().toISOString(), device:navigator.userAgent.slice(0,40) };
+}
+
+function applySyncBlob(blob){
+  if(!blob||!blob.data) return 0;
+  let count=0;
+  Object.keys(blob.data).forEach(k=>{
+    if(!k.startsWith('sb_')){ localStorage.setItem(k,blob.data[k]); count++; }
+  });
+  return count;
+}
+
+async function sbRefreshToken(){
+  if(!SB.refresh) return false;
+  try{
+    const res=await fetch(`${SB.url}/auth/v1/token?grant_type=refresh_token`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB.key},
+      body:JSON.stringify({refresh_token:SB.refresh})
+    });
+    const data=await res.json();
+    if(res.ok&&data.access_token){
+      SB.token=data.access_token; SB.refresh=data.refresh_token||SB.refresh;
+      sbSaveConfig(); return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+async function syncPush(){
+  if(!sbSignedIn()){ toast('Sign in first'); return; }
+  const blob=buildSyncBlob();
+  const doReq=async()=>fetch(`${SB.url}/rest/v1/sr_state?on_conflict=user_id`,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey':SB.key,
+      'Authorization':'Bearer '+SB.token,
+      'Prefer':'resolution=merge-duplicates'
+    },
+    body:JSON.stringify({ user_id:SB.userId, data:blob, updated_at:new Date().toISOString() })
+  });
+  try{
+    toast('Syncing to cloud...');
+    let res=await doReq();
+    if(res.status===401&&await sbRefreshToken()) res=await doReq();
+    if(res.ok||res.status===201){
+      localStorage.setItem('sb_lastsync',new Date().toISOString());
+      updateSyncUI();
+      toast('✓ Synced to cloud ('+Object.keys(blob.data).length+' items)');
+    } else {
+      const e=await res.json().catch(()=>({}));
+      toast('Sync failed: '+(e.message||res.status));
+    }
+  }catch(e){ toast('Sync error — check connection'); }
+}
+
+async function syncPull(silent){
+  if(!sbSignedIn()){ if(!silent)toast('Sign in first'); return; }
+  const doReq=async()=>fetch(`${SB.url}/rest/v1/sr_state?user_id=eq.${SB.userId}&select=data`,{
+    headers:{'apikey':SB.key,'Authorization':'Bearer '+SB.token}
+  });
+  try{
+    if(!silent) toast('Pulling from cloud...');
+    let res=await doReq();
+    if(res.status===401&&await sbRefreshToken()) res=await doReq();
+    if(!res.ok){ if(!silent)toast('Pull failed: '+res.status); return; }
+    const rows=await res.json();
+    if(!rows.length||!rows[0].data){ if(!silent)toast('No cloud data yet — push first'); return; }
+    const count=applySyncBlob(rows[0].data);
+    localStorage.setItem('sb_lastsync',new Date().toISOString());
+    toast('✓ Pulled '+count+' items. Reloading...');
+    setTimeout(()=>location.reload(),1200);
+  }catch(e){ if(!silent)toast('Pull error — check connection'); }
+}
+
+function updateSyncUI(){
+  const signedIn=sbSignedIn();
+  const outEl=document.getElementById('sync-signed-out');
+  const inEl=document.getElementById('sync-signed-in');
+  if(outEl) outEl.style.display=signedIn?'none':'block';
+  if(inEl) inEl.style.display=signedIn?'block':'none';
+  if(signedIn){
+    const em=document.getElementById('sync-email');
+    if(em) em.textContent=SB.email;
+    const last=localStorage.getItem('sb_lastsync');
+    const st=document.getElementById('sync-status');
+    if(st) st.textContent='Last sync: '+(last?new Date(last).toLocaleString():'never');
+  } else {
+    // Prefill saved url/key for convenience
+    const u=document.getElementById('sb-url-input');
+    const k=document.getElementById('sb-key-input');
+    if(u&&SB.url&&!u.value) u.value=SB.url;
+    if(k&&SB.key&&!k.value) k.value=SB.key;
+  }
+}
+
+// Auto-sync: push after significant changes (debounced)
+let _syncTimer=null;
+function autoSyncPush(){
+  if(!sbSignedIn()) return;
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>{ syncPushSilent(); }, 5000);
+}
+async function syncPushSilent(){
+  if(!sbSignedIn()) return;
+  const blob=buildSyncBlob();
+  try{
+    let res=await fetch(`${SB.url}/rest/v1/sr_state?on_conflict=user_id`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB.key,'Authorization':'Bearer '+SB.token,'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({ user_id:SB.userId, data:blob, updated_at:new Date().toISOString() })
+    });
+    if(res.status===401&&await sbRefreshToken()){
+      await fetch(`${SB.url}/rest/v1/sr_state?on_conflict=user_id`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':SB.key,'Authorization':'Bearer '+SB.token,'Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({ user_id:SB.userId, data:blob, updated_at:new Date().toISOString() })
+      });
+    }
+    if(res.ok||res.status===201){ localStorage.setItem('sb_lastsync',new Date().toISOString()); updateSyncUI(); }
+  }catch(e){}
+}
 
 function oneTabBackup(){
   // Same as exportData('json') but with auto-save to iCloud on iOS
