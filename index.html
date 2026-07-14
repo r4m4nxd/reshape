@@ -7555,14 +7555,17 @@ async function sbAuth(mode){
 
     if(!res.ok){
       const err=data.error_description||data.msg||data.error||('HTTP '+res.status);
-      if(res.status===400&&mode==='signin'&&/invalid/i.test(err))
-        syncStatus('❌ Wrong email or password. If new, tap Sign Up first.','err');
-      else if(res.status===422||/already/i.test(err))
-        syncStatus('❌ Account already exists. Tap Sign In instead.','err');
+      // Show the RAW status + message so we can diagnose exactly
+      let hint='';
+      if(res.status===400&&/email not confirmed|not confirmed/i.test(err))
+        hint='<br><br>🔧 FIX: Supabase → Authentication → Providers → Email → turn OFF "Confirm email", then Sign Up again.';
+      else if(res.status===400&&/invalid login/i.test(err))
+        hint='<br><br>🔧 This account/password doesn\'t exist yet. Tap <strong>Sign Up</strong> first.';
+      else if(res.status===422||/already registered|already exists/i.test(err))
+        hint='<br><br>🔧 Account exists — tap <strong>Sign In</strong> instead of Sign Up.';
       else if(res.status===401||res.status===403)
-        syncStatus('❌ Invalid API key. Copy the anon/public key from Supabase → Settings → API.','err');
-      else
-        syncStatus('❌ '+err,'err');
+        hint='<br><br>🔧 API key rejected. Re-copy the anon/public key from Supabase → Settings → API.';
+      syncStatus(`❌ <strong>HTTP ${res.status}</strong><br>${err}${hint}`,'err');
       return;
     }
 
