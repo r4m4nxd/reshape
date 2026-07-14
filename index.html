@@ -1845,6 +1845,9 @@ body{scroll-behavior:auto;}
     <div class="saved-meal-btn" onclick="logSavedMeal(4)"><div class="sm-icon">🌙</div><div style="flex:1"><div class="sm-meal-name">Dinner (Dal or Paneer)</div><div class="sm-macro">ONE main · 2 rotis · Sabzi · Dahi · Wife cooks</div></div><div><div class="sm-kcal">570 kcal</div><div class="sm-macro">P:33–41g C:70g F:18–23g</div></div><button class="sm-add-btn">+ Add</button></div>
   </div>
 
+  <!-- Pre-meal proactive coach (Priority 4) -->
+  <div id="premeal-coach" style="display:none;margin:0 14px 12px;padding:12px 14px;border-radius:14px;line-height:1.55;font-size:13px;"></div>
+
   <!-- Macro alert -->
   <div id="macro-alert" style="display:none;margin:0 14px 12px;padding:12px 14px;border-radius:14px;background:rgba(255,179,0,0.08);border:1px solid rgba(255,179,0,0.25);font-size:13px;color:var(--gold);line-height:1.6;"></div>
 
@@ -2030,6 +2033,15 @@ body{scroll-behavior:auto;}
 
   <!-- AI Predictive Insights -->
   <div id="ai-insights-block" style="margin-bottom:4px;"></div>
+
+  <!-- AI Correlation Engine -->
+  <div class="sec-lbl">🔬 WHAT'S DRIVING YOUR RESULTS</div>
+  <div class="card" style="margin:0 14px 14px;padding:0;overflow:hidden;">
+    <div id="correlation-feed" style="padding:14px;">
+      <div style="font-size:12px;color:var(--text3);line-height:1.6;">The correlation engine analyses links between your sleep, training, nutrition, steps and weight to find what's actually moving the needle. Needs ~7 days of data.</div>
+    </div>
+    <button onclick="runCorrelationEngine()" id="corr-btn" style="width:100%;padding:13px;border:none;border-top:1px solid var(--border);background:linear-gradient(135deg,rgba(156,39,176,0.15),rgba(156,39,176,0.05));color:var(--purple);font-family:'Syne';font-size:13px;font-weight:800;cursor:pointer;">🔬 Analyse My Patterns</button>
+  </div>
 
   <!-- Effort → Result Insights -->
   <div class="sec-lbl">💡 INSIGHTS</div>
@@ -2682,6 +2694,126 @@ function selectDay(day,btn){
   document.documentElement.scrollTop=0;
 }
 
+/* ═══════════ DYNAMIC WORKOUT ADJUST (Priority 3) ═══════════
+   Reads today's readiness (sleep, soreness, knee, energy) and
+   recommends volume adjustments + a time-crunch version. */
+function getReadiness(){
+  const f=S(Sd('fatigue'))||{};
+  const knee=(S('tfm_knee')||{})[TODAY_KEY];
+  return {
+    sleep: parseFloat(f.sleep)||null,
+    energy: parseInt(f.energy)||null,
+    sore: parseInt(f.sore)||null,
+    knee: knee!==undefined?knee:null,
+  };
+}
+
+function computeVolumeAdjust(r){
+  // Returns {pct, reason, level} — how much to scale today's volume
+  let pct=100; const reasons=[];
+  if(r.sleep!==null){
+    if(r.sleep<5){ pct-=25; reasons.push('slept '+r.sleep+'h'); }
+    else if(r.sleep<6){ pct-=15; reasons.push('slept '+r.sleep+'h'); }
+    else if(r.sleep>=8){ pct+=5; }
+  }
+  if(r.sore!==null){
+    if(r.sore>=8){ pct-=20; reasons.push('soreness '+r.sore+'/10'); }
+    else if(r.sore>=6){ pct-=10; reasons.push('soreness '+r.sore+'/10'); }
+  }
+  if(r.energy!==null){
+    if(r.energy<=2){ pct-=15; reasons.push('low energy'); }
+    else if(r.energy>=5){ pct+=5; }
+  }
+  pct=Math.max(50,Math.min(110,pct));
+  const level = pct<=70?'reduce':pct>=105?'push':'normal';
+  return {pct, reasons, level};
+}
+
+function buildSmartAdjustBanner(day){
+  const r=getReadiness();
+  const logged = r.sleep!==null||r.sore!==null||r.energy!==null;
+  if(!logged){
+    return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+      <div style="font-size:12px;color:var(--text3);line-height:1.5;">💡 Log this morning's <strong style="color:var(--text2)">sleep, energy &amp; soreness</strong> on the Home page and I'll auto-adjust today's volume to match your recovery.</div>
+    </div>`;
+  }
+  const adj=computeVolumeAdjust(r);
+  const kneeWarn = r.knee!==null && r.knee>=4;
+  let color = adj.level==='reduce'?'var(--gold)':adj.level==='push'?'var(--green)':'var(--blue)';
+  let icon = adj.level==='reduce'?'🔋':adj.level==='push'?'🔥':'✅';
+  let headline = adj.level==='reduce'?`Recovery mode — do ${adj.pct}% volume today`
+              : adj.level==='push'?`You're primed — push hard (${adj.pct}%)`
+              : `Good to train at full volume`;
+  let detail = adj.reasons.length?`Because you ${adj.reasons.join(' + ')}. `:'';
+  if(adj.level==='reduce') detail+='Drop 1 set per exercise or reduce weight ~10%. Quality over quantity today.';
+  else if(adj.level==='push') detail+='Add a set to your main lifts or push RPE to 8-9. Great day for progression.';
+  else detail+='Hit your planned sets and aim to beat last session.';
+
+  return `
+    <div style="background:linear-gradient(135deg,${color.replace('var(--','rgba(').replace(')',',0.12)')},rgba(255,255,255,0.02));border:1.5px solid ${color.replace('var(--','rgba(').replace(')',',0.3)')};border-radius:14px;padding:12px 14px;">
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="font-size:22px;flex-shrink:0;">${icon}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne';font-size:13px;font-weight:800;color:${color};">${headline}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${detail}</div>
+          ${kneeWarn?`<div style="font-size:11px;color:var(--gold);margin-top:6px;">🦵 Knee at ${r.knee}/10 — leg compounds already swapped to knee-safe versions below.</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="showTimeCrunch('${day}')" style="flex:1;padding:9px;border-radius:10px;background:var(--card3);border:1px solid var(--border2);color:var(--text2);font-family:'Syne';font-size:11px;font-weight:800;cursor:pointer;">⏱️ Only 30 min?</button>
+        <button onclick="askAIRebuild('${day}')" style="flex:1;padding:9px;border-radius:10px;background:rgba(156,39,176,0.12);border:1px solid rgba(156,39,176,0.3);color:var(--purple);font-family:'Syne';font-size:11px;font-weight:800;cursor:pointer;">🤖 AI Rebuild</button>
+      </div>
+    </div>`;
+}
+
+function showTimeCrunch(day){
+  const ex=getActivePlan(day);
+  if(!ex||!ex.length) return;
+  // Pick the top compound movements (first 4 non-timer, weighted exercises)
+  const priority=ex.filter(e=>!e.isTimer&&!e.isCardio).slice(0,4);
+  const list=priority.map((e,i)=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+    <div style="width:24px;height:24px;border-radius:7px;background:var(--fireDim);color:var(--fire);display:flex;align-items:center;justify-content:center;font-family:'Syne';font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
+    <div style="flex:1;"><div style="font-size:13px;font-weight:700;">${e.n}</div><div style="font-size:11px;color:var(--text3);">${e.sets>3?3:e.sets} sets × ${e.reps} · rest 60s</div></div>
+  </div>`).join('');
+  showInfoModal('⏱️ 30-Minute Version',
+    `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;">Short on time? Do just these ${priority.length} compound lifts — they hit the most muscle. 3 sets each, shorter rest. You'll keep ~80% of the benefit in half the time.</div>${list}<div style="font-size:11px;color:var(--text3);margin-top:12px;">Skip isolation work (curls, raises, flyes) today. Compounds first — they're what drive fat loss and testosterone.</div>`);
+}
+
+async function askAIRebuild(day){
+  const key=getApiKey();
+  if(!key){ toast('Add OpenAI key in More → AI Settings'); return; }
+  const r=getReadiness();
+  const ex=getActivePlan(day);
+  const exNames=ex.map(e=>e.n+' ('+e.sets+'×'+e.reps+')').join(', ');
+  showInfoModal('🤖 AI Rebuilding...','<div class="ai-thinking"><div class="ai-dots"><span></span><span></span><span></span></div><span>Adapting today\'s session to your recovery...</span></div>');
+
+  const system=`You are a strength coach. Rebuild today's workout based on the user's recovery state. He's losing 20kg, has a PCL knee (no deep flexion — favour hip thrusts, RDLs), low testosterone (compound lifts help). Keep it realistic and specific. Return plain text, max 120 words: a short readiness verdict, then the adjusted exercise list with sets×reps, then one recovery tip.`;
+  const prompt=`Today's planned: ${exNames}.\nReadiness — sleep:${r.sleep||'?'}h, energy:${r.energy||'?'}/5, soreness:${r.sore||'?'}/10, knee:${r.knee!==null?r.knee+'/10':'?'}.\nRebuild it for how he feels today.`;
+  const resp=await callClaude(system,prompt,300);
+  showInfoModal('🤖 Today\'s Adjusted Session',
+    resp?`<div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;">${resp.replace(/</g,'&lt;')}</div>`
+        :'<div style="font-size:13px;color:var(--red);">Could not reach AI. Check your key and connection.</div>');
+}
+
+/* Generic info modal (reuses delete-confirm modal styling) */
+function showInfoModal(title, bodyHtml){
+  let modal=document.getElementById('info-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='info-modal';
+    modal.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.onclick=(e)=>{if(e.target===modal)modal.remove();};
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:20px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Syne';font-size:16px;font-weight:900;">${title}</div>
+      <button onclick="document.getElementById('info-modal').remove()" style="background:var(--card3);border:none;color:var(--text3);width:30px;height:30px;border-radius:15px;font-size:16px;cursor:pointer;">×</button>
+    </div>
+    ${bodyHtml}
+  </div>`;
+}
+
 function buildWorkoutForDay(day){
   currentDay=day;
   const c=document.getElementById('workout-content');
@@ -2709,6 +2841,12 @@ function buildWorkoutForDay(day){
     ${CUSTOM_PLAN&&CUSTOM_PLAN[day]?`<button onclick="resetDayPlan('${day}')" style="padding:10px 14px;border-radius:12px;background:var(--card3);border:1px solid var(--border2);color:var(--text3);font-family:'Syne';font-size:12px;cursor:pointer;">↺ Reset</button>`:''}
   `;
   c.appendChild(ctrlDiv);
+
+  // ── Dynamic Workout Adjust (Priority 3) ──
+  const adjustDiv=document.createElement('div');
+  adjustDiv.style.cssText='padding:0 14px;margin-bottom:12px;';
+  adjustDiv.innerHTML=buildSmartAdjustBanner(day);
+  c.appendChild(adjustDiv);
 
   // hero
   const heroColors={mon:'#1a0a02,#200f00',tue:'#001a0d,#002d1a',thu:'#100520,#1a0835',fri:'#1a0010,#2d0018'};
@@ -3973,6 +4111,58 @@ function updateNutritionTotals(){
   document.getElementById('p-eaten').textContent=totalP;document.getElementById('p-bar').style.width=Math.min(100,totalP/190*100)+'%';
   document.getElementById('c-eaten').textContent=totalC;document.getElementById('c-bar').style.width=Math.min(100,totalC/110*100)+'%';
   document.getElementById('f-eaten').textContent=totalF;document.getElementById('f-bar').style.width=Math.min(100,totalF/65*100)+'%';
+  updatePreMealCoach(totalKcal, totalP, totalC, totalF, targetKcal);
+}
+
+/* Pre-meal proactive coach (Priority 4) — forward-looking, rule-based, instant */
+function updatePreMealCoach(kcal, prot, carb, fat, targetKcal){
+  const el=document.getElementById('premeal-coach');
+  if(!el) return;
+  const mode=GOAL_MODES[GOAL_MODE];
+  const pTarget=mode?.p||190;
+  const hour=new Date().getHours();
+  const kcalLeft=targetKcal-kcal;
+  const pLeft=pTarget-prot;
+
+  let msg='', bg='', border='', color='';
+  const setStyle=(c)=>{
+    bg=c.replace('var(--','rgba(').replace(')',',0.1)');
+    border=c.replace('var(--','rgba(').replace(')',',0.28)');
+    color=c;
+  };
+
+  // Priority logic: protein gap is most important for his labs
+  if(prot===0 && kcal===0){
+    // Nothing logged yet
+    if(hour>=11){ msg=`🍳 Nothing logged yet and it's past ${hour>12?hour-12+'pm':hour+'am'}. Start with a protein source — eggs or whey — to hit ${pTarget}g today.`; setStyle('var(--gold)'); }
+    else { el.style.display='none'; return; }
+  } else if(pLeft>60 && hour>=17){
+    msg=`⚠️ Protein at ${prot}g — you need <strong>${pLeft}g more</strong> before bed. That's soya chunks (30g) + paneer or another whey scoop. Protein protects muscle in your deficit and supports testosterone.`;
+    setStyle('var(--red)');
+  } else if(kcalLeft<150 && pLeft>25){
+    msg=`🎯 Almost out of calories (${kcalLeft} left) but ${pLeft}g protein short. Make your remaining food <strong>lean protein</strong> — soya, egg whites, or a light whey scoop. Skip the carbs/fats now.`;
+    setStyle('var(--fire)');
+  } else if(kcalLeft<0){
+    msg=`🛑 You're ${Math.abs(kcalLeft)} kcal over target. If still hungry, stick to water or black coffee. One day slightly over won't derail 20kg — just don't stack days.`;
+    setStyle('var(--red)');
+  } else if(carb>mode?.c+30 && hour<18){
+    msg=`🍚 Carbs at ${carb}g (target ${mode?.c}g) — you're front-loaded. Keep dinner low-carb: paneer + sabzi, skip the rice tonight. Better insulin control overnight.`;
+    setStyle('var(--gold)');
+  } else if(prot>=pTarget){
+    msg=`✅ Protein target smashed (${prot}g)! ${kcalLeft>0?kcalLeft+' kcal left if you want them — keep it clean.':'Right on calories too. Great day.'}`;
+    setStyle('var(--green)');
+  } else if(pLeft>0 && pLeft<=40){
+    msg=`💪 ${pLeft}g protein to go — you're close. One more protein snack (soya chunks or Greek yogurt) locks in ${pTarget}g.`;
+    setStyle('var(--blue)');
+  } else {
+    el.style.display='none'; return;
+  }
+
+  el.style.display='block';
+  el.style.background=bg;
+  el.style.border='1px solid '+border;
+  el.style.color=color;
+  el.innerHTML=msg;
 }
 
 /* ═══════════════════ PROGRESS ═══════════════════ */
@@ -5421,6 +5611,112 @@ async function buildAIPredictiveInsights(){
       el.innerHTML=`<div class="ai-insight-card"><div class="ai-insight-label">✦ AI Prediction</div><div class="ai-insight-text">${response.replace(/```json|```/g,'').trim()}</div></div>`;
     }
   } else { el.innerHTML=''; }
+}
+
+/* ═══════════ CORRELATION ENGINE (Priority 2) ═══════════
+   Gathers paired daily data across many days and asks the AI to
+   find real cause→effect patterns linking habits to results. */
+function gatherCorrelationData(days){
+  days = days||28;
+  const rows=[];
+  const weights=S('tfm_weight_log')||[];
+  const scores=S('tfm_daily_scores')||{};
+  const kneeFull=S('tfm_knee_full')||[];
+  for(let d=0;d<days;d++){
+    const date=new Date(Date.now()-d*86400000).toISOString().slice(0,10);
+    const fatigue=JSON.parse(localStorage.getItem('fatigue_'+date)||'{}');
+    const steps=JSON.parse(localStorage.getItem('steps_'+date)||'0');
+    const water=JSON.parse(localStorage.getItem('water_'+date)||'0');
+    const woComplete=JSON.parse(localStorage.getItem('wo_complete_'+date)||'{}');
+    const workoutSets=JSON.parse(localStorage.getItem('workout_sets_'+date)||'{}');
+    const mealLog=JSON.parse(localStorage.getItem('meal_logged_'+date)||'{}');
+    const quickAdd=JSON.parse(localStorage.getItem('quick_add_'+date)||'[]');
+    const w=weights.find(x=>x.date===date);
+    const kneeToday=kneeFull.filter(k=>k.date===date).map(k=>k.value);
+    // Compute nutrition
+    let kcal=0,prot=0;
+    MEALS_DATA.forEach(meal=>meal.foods.forEach((f,fi)=>{if(mealLog[meal.id+'_'+fi+date]){kcal+=f.kcal;prot+=f.p;}}));
+    quickAdd.forEach(i=>{kcal+=i.kcal||0;prot+=i.p||0;});
+    // Best RPE across sets
+    const rpes=Object.values(workoutSets).map(s=>s.rpe).filter(Boolean);
+    const avgRpe=rpes.length?(rpes.reduce((a,b)=>a+b,0)/rpes.length).toFixed(1):null;
+    const trained=Object.values(woComplete).some(Boolean)||Object.keys(workoutSets).length>0;
+    // Only include days with at least some data
+    if(fatigue.sleep||steps||water||w||kcal||trained){
+      rows.push({
+        date:date.slice(5),
+        sleep:fatigue.sleep||null,
+        energy:fatigue.energy||null,
+        sore:fatigue.sore||null,
+        steps:steps||null,
+        water:water?+(water*0.25).toFixed(1):null,
+        trained:trained?1:0,
+        avgRpe:avgRpe,
+        kcal:kcal||null,
+        protein:prot||null,
+        weight:w?w.weight:null,
+        knee:kneeToday.length?Math.max(...kneeToday):null,
+        score:scores[date]||null,
+      });
+    }
+  }
+  return rows.reverse(); // oldest first
+}
+
+async function runCorrelationEngine(){
+  const feed=document.getElementById('correlation-feed');
+  const btn=document.getElementById('corr-btn');
+  if(!feed) return;
+  const key=getApiKey();
+  if(!key){ feed.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">Add your OpenAI API key in More → AI Settings to unlock the correlation engine.</div>'; return; }
+
+  // Cache per day
+  const cache=S('sr_correlations_'+TODAY_KEY);
+  if(cache){ feed.innerHTML=cache; return; }
+
+  const data=gatherCorrelationData(28);
+  if(data.length<5){
+    feed.innerHTML='<div style="font-size:12px;color:var(--text3);line-height:1.6;padding:4px 0">Only '+data.length+' days of data so far. Log daily for ~7 days (weight, sleep, steps, training, meals) and the engine can find real patterns.</div>';
+    return;
+  }
+
+  if(btn){ btn.disabled=true; btn.textContent='🔬 Analysing '+data.length+' days...'; }
+  feed.innerHTML='<div class="ai-thinking"><div class="ai-dots"><span></span><span></span><span></span></div><span>Finding patterns in your data...</span></div>';
+
+  const system=`You are a data scientist analysing a fitness dataset to find REAL correlations between daily habits and results. The user (Raman) is a 6ft man losing 20kg (103→83kg) with low testosterone, high triglycerides, prediabetic HbA1c, and a PCL knee injury. 
+
+Find 3-4 genuine patterns in the data linking inputs (sleep, steps, water, training, RPE, calories, protein) to outcomes (weight change, energy, soreness, knee pain, workout performance). Only state patterns the data actually supports — if data is thin, say so honestly. Each insight must be specific with numbers.
+
+Return ONLY a JSON array, no markdown:
+[{"icon":"😴","finding":"specific pattern with actual numbers from the data <25 words","action":"one concrete thing to do <15 words"}]`;
+
+  const prompt=`Daily data (oldest→newest), null = not logged:\n${JSON.stringify(data)}\n\nFind the strongest real correlations. Focus on what's helping or hurting fat loss and recovery. JSON array only.`;
+
+  const response=await callClaude(system,prompt,500);
+  if(btn){ btn.disabled=false; btn.textContent='🔄 Re-analyse'; }
+
+  if(response){
+    try{
+      const clean=response.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+      const insights=JSON.parse(clean);
+      const rendered=insights.map(ins=>`
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="font-size:22px;flex-shrink:0;">${ins.icon||'🔬'}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;color:var(--text);line-height:1.5;font-weight:600;">${ins.finding}</div>
+              <div style="font-size:12px;color:var(--purple);margin-top:5px;font-weight:700;">→ ${ins.action}</div>
+            </div>
+          </div>
+        </div>`).join('');
+      feed.innerHTML=rendered;
+      S('sr_correlations_'+TODAY_KEY, rendered);
+    }catch(e){
+      feed.innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;">${response.replace(/```json|```/g,'').trim()}</div>`;
+    }
+  } else {
+    feed.innerHTML='<div style="font-size:12px;color:var(--red);padding:8px 0">Could not reach AI. Check your API key and connection.</div>';
+  }
 }
 
 function saveNinjaKey(){
