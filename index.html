@@ -1810,11 +1810,11 @@ body{scroll-behavior:auto;}
         <div class="macro-track"><div class="macro-fill" id="p-bar" style="width:0%;background:var(--fire)"></div></div>
       </div>
       <div class="macro-row-mfp">
-        <div class="macro-head"><span class="macro-name" style="color:var(--blue)">Carbs</span><span class="macro-vals"><span id="c-eaten">0</span>g / 130g</span></div>
+        <div class="macro-head"><span class="macro-name" style="color:var(--blue)">Carbs</span><span class="macro-vals"><span id="c-eaten">0</span>g / 110g</span></div>
         <div class="macro-track"><div class="macro-fill" id="c-bar" style="width:0%;background:var(--blue)"></div></div>
       </div>
       <div class="macro-row-mfp">
-        <div class="macro-head"><span class="macro-name" style="color:var(--gold)">Fat</span><span class="macro-vals"><span id="f-eaten">0</span>g / 60g</span></div>
+        <div class="macro-head"><span class="macro-name" style="color:var(--gold)">Fat</span><span class="macro-vals"><span id="f-eaten">0</span>g / 58g</span></div>
         <div class="macro-track"><div class="macro-fill" id="f-bar" style="width:0%;background:var(--gold)"></div></div>
       </div>
     </div>
@@ -1913,7 +1913,7 @@ body{scroll-behavior:auto;}
   <div class="weight-hero">
     <div class="wh-lbl">Current Weight</div>
     <div class="wh-val" id="wh-val">103 <span class="wh-unit">kg</span></div>
-    <div class="wh-sub" id="wh-sub">🎯 Goal: 85kg · 18kg to go</div>
+    <div class="wh-sub" id="wh-sub">🎯 Goal: 83kg · 18kg to go</div>
     <div class="wh-btns">
       <button class="wh-btn" onclick="adjWeight(-0.5)" style="background:rgba(0,200,117,0.15);border:1.5px solid rgba(0,200,117,0.35);color:var(--green)">− 0.5</button>
       <button class="wh-btn" onclick="adjWeight(-0.1)" style="background:rgba(0,200,117,0.1);border:1.5px solid rgba(0,200,117,0.2);color:var(--green);font-size:13px">−0.1</button>
@@ -1927,8 +1927,19 @@ body{scroll-behavior:auto;}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px;margin-bottom:14px;" id="weekly-stats-grid">
     <div class="analytics-tile" id="at-workouts"><div class="at-val" id="at-wo-val">0/5</div><div class="at-lbl">Workouts</div><div class="at-sub" id="at-wo-sub">this week</div></div>
     <div class="analytics-tile" id="at-streak"><div class="at-val" id="at-streak-val" style="color:var(--fire)">0🔥</div><div class="at-lbl">Day Streak</div><div class="at-sub">keep going</div></div>
-    <div class="analytics-tile"><div class="at-val" id="at-cal-avg" style="color:var(--gold)">—</div><div class="at-lbl">Avg Calories</div><div class="at-sub">vs 2000 target</div></div>
+    <div class="analytics-tile"><div class="at-val" id="at-cal-avg" style="color:var(--gold)">—</div><div class="at-lbl">Avg Calories</div><div class="at-sub">vs 1750 target</div></div>
     <div class="analytics-tile"><div class="at-val" id="at-water-avg" style="color:var(--blue)">—</div><div class="at-lbl">Avg Water</div><div class="at-sub">vs 3.5L target</div></div>
+  </div>
+
+  <!-- 20kg Journey projection -->
+  <div class="sec-lbl">🎯 20KG GOAL PROJECTION</div>
+  <div class="card card-p" style="margin:0 14px 14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+      <div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">Lost so far</div><div style="font-family:'Syne';font-size:26px;font-weight:900;color:var(--green)" id="proj-lost">0.0 kg</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">Remaining</div><div style="font-family:'Syne';font-size:26px;font-weight:900;color:var(--gold)" id="proj-remain">20.0 kg</div></div>
+    </div>
+    <div style="height:10px;background:var(--card3);border-radius:10px;overflow:hidden;margin-bottom:8px;"><div id="proj-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--fire));border-radius:10px;transition:width 0.6s"></div></div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.5;text-align:center" id="proj-eta">Log your weight weekly to see your projected goal date based on your actual pace.</div>
   </div>
 
   <!-- Knee pain tracker -->
@@ -3992,8 +4003,8 @@ function updateNutritionTotals(){
   // Update goal label dynamically
   const goalEl=document.getElementById('nut-kcal-goal');
   if(goalEl) goalEl.textContent=targetKcal.toLocaleString();
-  document.getElementById('p-eaten').textContent=totalP;document.getElementById('p-bar').style.width=Math.min(100,totalP/180*100)+'%';
-  document.getElementById('c-eaten').textContent=totalC;document.getElementById('c-bar').style.width=Math.min(100,totalC/130*100)+'%';
+  document.getElementById('p-eaten').textContent=totalP;document.getElementById('p-bar').style.width=Math.min(100,totalP/190*100)+'%';
+  document.getElementById('c-eaten').textContent=totalC;document.getElementById('c-bar').style.width=Math.min(100,totalC/110*100)+'%';
   document.getElementById('f-eaten').textContent=totalF;document.getElementById('f-bar').style.width=Math.min(100,totalF/65*100)+'%';
 }
 
@@ -4014,17 +4025,18 @@ function buildMilestones(){
 
 function updateWeightDisplay(){
   document.getElementById('wh-val').innerHTML=`${CW} <span class="wh-unit">kg</span>`;
-  const left=Math.max(0,CW-85).toFixed(1);
-  document.getElementById('wh-sub').textContent=`🎯 Goal: 85kg · ${left}kg to go`;
+  const left=Math.max(0,CW-83).toFixed(1);
+  document.getElementById('wh-sub').textContent=`🎯 Goal: 83kg · ${left}kg to go`;
   const lost=Math.max(0,103-CW);
-  const pct=Math.min(100,lost/18*100);
+  const pct=Math.min(100,lost/20*100);
   document.getElementById('pr-lost-bar').style.width=pct+'%';
-  document.getElementById('pr-lost-lbl').textContent=`${lost.toFixed(1)} / 18 kg`;
+  document.getElementById('pr-lost-lbl').textContent=`${lost.toFixed(1)} / 20 kg`;
   document.getElementById('pr-journey-bar').style.width=pct+'%';
   const jLabels=['Just started 💪','Building momentum 🔥','Getting there 🎯','Looking amazing 😎','Almost done ⚡','GOAL REACHED 🏆'];
   document.getElementById('pr-journey-lbl').textContent=jLabels[Math.min(5,Math.floor(pct/20))];
   buildMilestones();
   updateHomeStats();
+  if(typeof updateGoalProjection==='function') updateGoalProjection();
 }
 
 function adjWeight(delta){
@@ -4920,9 +4932,9 @@ function showCopyModal(text){
 
 /* ═══════════ GOAL MODE ═══════════ */
 const GOAL_MODES = {
-  loss:  {label:'🔥 Fat Loss',    kcal:1800, p:180, c:120, f:60,  note:'Moderate deficit · 180g protein · Low refined carbs · Fix insulin resistance'},
-  gain:  {label:'💪 Muscle Gain', kcal:2200, p:190, c:200, f:65,  note:'200 cal surplus · High protein · Complex carbs only'},
-  maint: {label:'⚖️ Maintain',    kcal:2000, p:175, c:150, f:65,  note:'Maintenance · High protein · Balanced fat · Low sugar'},
+  loss:  {label:'🔥 Fat Loss',    kcal:1750, p:190, c:110, f:58,  note:'~1000 kcal deficit · 190g protein preserves muscle · Low carb fixes insulin resistance · Target 0.8-1kg/week'},
+  gain:  {label:'💪 Lean Gain',   kcal:2300, p:190, c:210, f:65,  note:'Small surplus · High protein · Complex carbs only · Use once at goal weight'},
+  maint: {label:'⚖️ Maintain',    kcal:2100, p:180, c:150, f:65,  note:'Maintenance · High protein · Balanced · Low sugar'},
 };
 // [hoisted] let GOAL_MODE
 
@@ -5120,7 +5132,8 @@ function buildUserContext(){
   MEALS_DATA.forEach(meal=>meal.foods.forEach((f,fi)=>{if(ml[meal.id+'_'+fi+TODAY_KEY]){todayKcal+=f.kcal;todayP+=f.p;}}));
   qa.forEach(i=>{todayKcal+=i.kcal||0;todayP+=i.p||0;});
 
-  return `Raman Singh | 6ft | ${CW}kg→85kg | PCL knee | Sikh veg | ${mode?.label}(${mode?.kcal}kcal ${mode?.p}gP)
+  return `Raman Singh | 6ft | ${CW}kg→83kg (20kg loss goal) | PCL left knee (no deep flexion) | Sikh vegetarian (eggs OK) | ${mode?.label}(${mode?.kcal}kcal ${mode?.p}gP)
+LABS (Jul 2026, WHY he's doing this): low total+free testosterone, high triglycerides, low HDL, prediabetic HbA1c 5.6%. Root cause = excess body fat + insulin resistance. Losing fat fixes ALL of these. Every rec should serve fat loss + insulin sensitivity + testosterone.
 TODAY(${TODAY_KEY} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]}): Sleep:${fatigue.sleep||'?'}h Energy:${fatigue.energy||'?'}/5 Sore:${fatigue.sore||'?'}/5 Water:${(water*0.25).toFixed(1)}L Steps:${steps} Knee:${kneeLast!==undefined?kneeLast+'/10':'?'} Kcal:${todayKcal}/${mode?.kcal} Protein:${todayP}g
 WORKOUTS(last 7): ${history.slice(-7).map(h=>h.date.slice(5)+'('+h.day+')').join(' ')||'none'}
 LIFTS: ${liftSummary.slice(0,4).join(' | ')||'none'}
@@ -5151,7 +5164,7 @@ async function buildCoachMessage(forceRefresh){
     if(tipEl) tipEl.textContent='';
 
     const context = buildUserContext();
-    const system = `You are an elite personal fitness coach for Raman Singh, a Sikh vegetarian man in Airdrie, Canada going from 103kg to 85kg. Be direct, specific, warm. Always reference his actual data numbers. Keep coaching message under 60 words, tip under 40 words. IMPORTANT: Respond ONLY with valid JSON, no markdown, no explanation.`;
+    const system = `You are an elite personal fitness coach for Raman Singh, a Sikh vegetarian man in Airdrie, Canada going from 103kg to 83kg. Be direct, specific, warm. Always reference his actual data numbers. Keep coaching message under 60 words, tip under 40 words. IMPORTANT: Respond ONLY with valid JSON, no markdown, no explanation.`;
     const prompt = `${context}\n\nGive Raman a personalised morning coaching message. Respond with ONLY this JSON (no markdown, no code blocks, no extra text):\n{"msg": "your main message here max 60 words", "tip": "your specific tip here max 40 words"}`;
 
     const response = await callClaude(system, prompt, 200);
@@ -5213,7 +5226,7 @@ async function openAIAnalysis(){
   content.innerHTML='<div class="ai-thinking"><div class="ai-dots"><span></span><span></span><span></span></div><span>Analysing your data...</span></div>';
 
   const context = buildUserContext();
-  const system = `Fitness coach for Raman: Sikh veg, 6ft, 103→85kg goal, PCL left knee. Analyse his data concisely. Use markdown with emojis. Max 220 words.`;
+  const system = `Fitness coach for Raman: Sikh veg, 6ft, 103→83kg goal, PCL left knee. Analyse his data concisely. Use markdown with emojis. Max 220 words.`;
   const prompt = `${context}\n\nWrite a short performance report (4 sections, 2 sentences each):\n## 📊 This Week\n## 💪 Strength\n## 🍛 Nutrition\n## 🎯 Top 2 Actions\nUse his actual numbers. Under 200 words total.`;
 
   const response = await callClaude(system, prompt, 350);
@@ -6896,7 +6909,7 @@ function promptGoalTransition(){
   modal.innerHTML=`
     <div style="background:var(--card2);border:1px solid rgba(0,200,117,0.3);border-radius:24px 24px 0 0;padding:28px 20px 44px;width:100%;max-width:480px;">
       <div style="font-size:48px;text-align:center;margin-bottom:12px;">🎉</div>
-      <div style="font-family:'Syne';font-size:22px;font-weight:900;text-align:center;margin-bottom:8px;">Goal Reached — 85kg!</div>
+      <div style="font-family:'Syne';font-size:22px;font-weight:900;text-align:center;margin-bottom:8px;">Goal Reached — 83kg!</div>
       <div style="font-size:13px;color:var(--text2);text-align:center;line-height:1.6;margin-bottom:24px;">Your fat loss phase is complete. What's next for you, Raman?</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button onclick="handleGoalTransition('gain',this.closest('[style]'))" style="padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(244,80,30,0.15),rgba(244,80,30,0.05));border:1.5px solid rgba(244,80,30,0.3);color:var(--fire);font-family:'Syne';font-size:16px;font-weight:800;cursor:pointer;text-align:left;">
@@ -6921,7 +6934,7 @@ async function handleGoalTransition(newMode, modal){
   toast('Switching goal — AI recalculating...','t-green');
   const groceryItems = [...document.querySelectorAll('.grocery-item:not(.got) .grocery-name')].map(el=>el.textContent).join(', ');
   const m=GOAL_MODES[newMode];
-  const system=`You are a fitness coach. Generate a meal plan for Raman Singh: Sikh vegetarian, 85kg, 6ft, goal: ${m.label}, target: ${m.kcal} kcal/day, ${m.p}g protein. Use only these available foods: ${groceryItems||'standard Indian vegetarian foods'}. Be specific and concise.`;
+  const system=`You are a fitness coach. Generate a meal plan for Raman Singh: Sikh vegetarian, 83kg, 6ft, goal: ${m.label}, target: ${m.kcal} kcal/day, ${m.p}g protein. Use only these available foods: ${groceryItems||'standard Indian vegetarian foods'}. Be specific and concise.`;
   const prompt=`Create a simple daily meal plan for ${m.label} with ${m.kcal} kcal and ${m.p}g protein. Format as JSON: {"meals":[{"name":"meal name","foods":[{"n":"food","kcal":0,"p":0,"c":0,"f":0}]}]}. JSON only.`;
   const response=await callClaude(system,prompt,600);
   if(response){
@@ -7069,9 +7082,47 @@ function buildWeightHistory(){
       </tr>`;
     }).join('')}
   </table>`;
+  updateGoalProjection();
 }
 
-// Hook knee pain logging to use timestamped version
+function updateGoalProjection(){
+  const weights=(S('tfm_weight_log')||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const START=103, GOAL=83, TOTAL=20;
+  if(!weights.length) return;
+  const current=weights[weights.length-1].weight;
+  const lost=Math.max(0, START-current);
+  const remain=Math.max(0, current-GOAL);
+  const pct=Math.min(100, lost/TOTAL*100);
+
+  const lostEl=document.getElementById('proj-lost');
+  const remainEl=document.getElementById('proj-remain');
+  const barEl=document.getElementById('proj-bar');
+  const etaEl=document.getElementById('proj-eta');
+  if(lostEl) lostEl.textContent=lost.toFixed(1)+' kg';
+  if(remainEl) remainEl.textContent=remain.toFixed(1)+' kg';
+  if(barEl) barEl.style.width=pct+'%';
+
+  if(!etaEl) return;
+  if(remain<=0){ etaEl.innerHTML='🏆 <strong style="color:var(--green)">Goal reached! Switch to Maintain or Lean Gain mode.</strong>'; return; }
+
+  // Compute weekly pace from last 14-28 days of data
+  if(weights.length<2){ etaEl.textContent='Log weight weekly — after 2+ entries you\'ll see your projected goal date.'; return; }
+  const first=weights[0], last=weights[weights.length-1];
+  const daysElapsed=Math.max(1,(new Date(last.date)-new Date(first.date))/86400000);
+  const totalLost=first.weight-last.weight;
+  const kgPerWeek=(totalLost/daysElapsed)*7;
+
+  if(kgPerWeek<=0.05){
+    etaEl.innerHTML='⚠️ <strong style="color:var(--gold)">Weight is flat or rising.</strong> Tighten calories to 1750 and hit 190g protein. Check you\'re logging everything you eat.';
+    return;
+  }
+  const weeksLeft=remain/kgPerWeek;
+  const eta=new Date(Date.now()+weeksLeft*7*86400000);
+  const etaStr=eta.toLocaleDateString('en-CA',{month:'long',year:'numeric'});
+  const paceColor=kgPerWeek>=0.7?'var(--green)':kgPerWeek>=0.4?'var(--gold)':'var(--fire)';
+  etaEl.innerHTML=`Current pace: <strong style="color:${paceColor}">${kgPerWeek.toFixed(2)} kg/week</strong><br>At this rate you'll hit 83kg around <strong style="color:var(--green)">${etaStr}</strong> (~${Math.ceil(weeksLeft)} weeks).`;
+}
+
 const _origBuildKnee = buildKneePainScale;
 function buildKneePainScale(){
   const c = document.getElementById('knee-scale');
@@ -7168,7 +7219,7 @@ async function syncPullQuiet(){
 // [hoisted] let WEIGHT_HISTORY
 
 function adjWeight(delta){
-  const wasAbove85 = CW > 85;
+  const wasAbove83 = CW > 83;
   CW = Math.round((CW+delta)*10)/10;
   CW = Math.max(70,Math.min(130,CW));
   S('tfm_cw',CW);
@@ -7182,9 +7233,9 @@ function adjWeight(delta){
   updateGoalModeLockUI();
   updateBodyStats();
   buildWeightHistory();
-  if(wasAbove85 && CW<=85){
+  if(wasAbove83 && CW<=83){
     setTimeout(()=>{
-      showCelebration('🎉 85KG REACHED! Time to reassess your goals!');
+      showCelebration('🎉 83KG REACHED! 20kg goal complete — reassess your goals!');
       promptGoalTransition();
     },600);
   } else {
@@ -7258,7 +7309,7 @@ function drawWeightChart(){
     ctx.beginPath(); ctx.moveTo(pad.l,goalY); ctx.lineTo(cW-pad.r,goalY); ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle='rgba(244,80,30,0.7)'; ctx.font='9px Nunito,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('Goal 85kg',pad.l+2,goalY-3);
+    ctx.fillText('Goal 83kg',pad.l+2,goalY-3);
   }
   document.getElementById('weight-chart-lbl').textContent=`${pts.length} data points · Start: ${pts[0].weight}kg → Now: ${pts[pts.length-1].weight}kg`;
 }
