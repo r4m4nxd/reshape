@@ -3695,7 +3695,7 @@ function buildExCard(ex,i,day,container,isCircuit){
     </svg>`;
   }
   const exIcon = getExIcon(ex.n, ex.m);
-  const isCustom = CUSTOM_PLAN && CUSTOM_PLAN[day];
+  const isCustom = true; /* allow add/remove on all days */
   const deleteBtnHtml = isCustom ? `<button onclick="event.stopPropagation();removeExerciseFromPlan('${day}',${i})" style="flex-shrink:0;background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.2);color:var(--red);border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:'Hanken Grotesk';font-weight:700;">Remove</button>` : '';
 
   const gifStrip=`<div class="ex-gif-strip">
@@ -6206,7 +6206,7 @@ function updateFatigueAdvice(){
   else if(sore>=3||energy<=2) advice='<i data-lucide="circle" class="lic"></i> Moderate fatigue. Reduce weights by 10-15%. Full range of motion, controlled reps. Quality over quantity.';
   else if(energy>=4&&sore<=2) advice='<i data-lucide="circle" class="lic"></i> Fully recovered and ready. Go for progressive overload today — try to beat your last session.';
   else advice='<i data-lucide="circle-check" class="lic"></i> Normal recovery. Proceed with planned workout. Stay hydrated and warm up properly.';
-  el.textContent=advice;
+  el.innerHTML=advice; if(window.renderIcons) renderIcons();
   el.style.color=sore>=4&&energy<=2?'var(--red)':sore>=3||energy<=2?'var(--gold)':'var(--green)';
 }
 
@@ -6821,7 +6821,7 @@ function calcBevelScores(){
   const energyStatus = energyPct >= 80 ? 'Fully charged <i data-lucide="battery-full" class="lic"></i>' : energyPct >= 60 ? 'Moderate readiness' : energyPct >= 40 ? 'Running low' : 'Depleted — rest today';
 
   // Update DOM
-  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const set = (id, val) => { const el = document.getElementById(id); if(el){ el.innerHTML = val; if(window.renderIcons) renderIcons(); } };
   const setW = (id, w) => { const el = document.getElementById(id); if(el) el.style.width = Math.min(100, w) + '%'; };
 
   set('bsc-recovery', recovery || '—'); setW('bsc-recovery-bar', recovery); set('bsc-recovery-sub', recoveryLabel);
@@ -6860,7 +6860,7 @@ function updateBodyStats(){
   const tdeeEl = document.getElementById('tdee-val');
   const vo2El = document.getElementById('vo2-val');
   if(bmiEl){ bmiEl.textContent = bmiRounded; }
-  if(bmiCatEl){ bmiCatEl.textContent = bmiCat; bmiCatEl.style.color = bmiColor; }
+  if(bmiCatEl){ bmiCatEl.innerHTML = bmiCat; bmiCatEl.style.color = bmiColor; if(window.renderIcons) renderIcons(); }
   if(tdeeEl){ tdeeEl.textContent = tdee; }
   if(vo2El){ vo2El.textContent = '~'+vo2; vo2El.style.color = vo2 >= 42 ? 'var(--green)' : vo2 >= 35 ? 'var(--gold)' : 'var(--text3)'; }
 }
